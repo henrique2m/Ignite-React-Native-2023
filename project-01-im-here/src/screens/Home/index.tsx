@@ -1,6 +1,7 @@
-import { StatusBar } from "expo-status-bar";
+import { useState } from "react";
 import {
   Alert,
+  AlertButton,
   FlatList,
   Text,
   TextInput,
@@ -8,7 +9,6 @@ import {
   View,
 } from "react-native";
 import { Participant } from "../../components/Participant";
-import { PARTICIPANTS } from "../../mocks/participants";
 import { styles } from "./styles";
 
 const EmptyFlatListText = () => (
@@ -19,14 +19,34 @@ const EmptyFlatListText = () => (
 );
 
 export function Home() {
-  const participants = PARTICIPANTS;
+  const [participants, setParticipants] = useState<string[]>([]);
+  const [participantName, setParticipantName] = useState("");
 
   const handleParticipantAdd = () => {
-    Alert.alert("Add");
+    const hasParticipant = participants.includes(participantName);
+    if (hasParticipant) {
+      return Alert.alert(
+        "Erro Participante",
+        "Já existe uma participante com esse nome."
+      );
+    }
+
+    setParticipants((prevState) => [...prevState, participantName]);
+    setParticipantName("");
   };
 
-  const handleParticipantRemove = () => {
-    Alert.alert("Remove");
+  const handleParticipantConfirmRemove = (name: string) => {
+    const accept = { text: "Sim", onPress: () => removeParticipant(name) };
+    const deny: AlertButton = { text: "Não", style: "cancel" };
+    const message = ` Deseja excluir o participante ${name}`;
+
+    Alert.alert("Remover Participante", message, [accept, deny]);
+  };
+
+  const removeParticipant = (name: string) => {
+    setParticipants((prevState) =>
+      prevState.filter((participant) => participant !== name)
+    );
   };
 
   return (
@@ -39,6 +59,8 @@ export function Home() {
           style={styles.input}
           placeholder="Nome do participante"
           placeholderTextColor="#6B6B6B"
+          onChangeText={setParticipantName}
+          value={participantName}
         />
 
         <TouchableOpacity style={styles.button} onPress={handleParticipantAdd}>
@@ -53,7 +75,7 @@ export function Home() {
           <Participant
             key={item}
             name={item}
-            onRemove={handleParticipantRemove}
+            onRemove={() => handleParticipantConfirmRemove(item)}
           />
         )}
         showsVerticalScrollIndicator={false}
